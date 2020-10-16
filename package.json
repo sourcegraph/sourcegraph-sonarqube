@@ -1,14 +1,19 @@
 {
-  "$schema": "https://raw.githubusercontent.com/sourcegraph/sourcegraph/master/shared/src/schema/extension.schema.json",
+  "$schema": "https://raw.githubusercontent.com/sourcegraph/sourcegraph/main/client/shared/src/schema/extension.schema.json",
   "name": "sonarqube",
-  "description": "",
+  "description": "Show Sonarqube issues when browsing files on Sourcegraph",
   "publisher": "sourcegraph",
+  "icon": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 512 512'%3E%3Cdefs/%3E%3Crect width='512' height='512' fill='%23549dd0'/%3E%3Cdefs%3E%3Crect id='a' y='0' width='512' height='512'/%3E%3C/defs%3E%3CclipPath id='b'%3E%3Cuse xlink:href='%23a' overflow='visible'/%3E%3C/clipPath%3E%3Cpath d='M409 448h-22c0-179-148-325-330-325v-22c194 0 352 155 352 347' clip-path='url(%23b)' fill='%23fff'/%3E%3Cg%3E%3Cdefs%3E%3Crect id='c' y='0' width='512' height='512'/%3E%3C/defs%3E%3CclipPath id='d'%3E%3Cuse xlink:href='%23c' overflow='visible'/%3E%3C/clipPath%3E%3Cpath d='M424 329A335 335 0 00192 89l5-18a354 354 0 01245 253l-18 5z' clip-path='url(%23d)' fill='%23fff'/%3E%3C/g%3E%3Cg%3E%3Cdefs%3E%3Crect id='e' y='0' width='512' height='512'/%3E%3C/defs%3E%3CclipPath id='f'%3E%3Cuse xlink:href='%23e' overflow='visible'/%3E%3C/clipPath%3E%3Cpath d='M441 223c-27-60-74-113-132-148l8-12c60 36 109 91 138 154l-14 6z' clip-path='url(%23f)' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E",
   "activationEvents": [
     "*"
   ],
   "wip": true,
-  "categories": [],
-  "tags": [],
+  "categories": [
+    "External services"
+  ],
+  "tags": [
+    "Sonarqube"
+  ],
   "contributes": {
     "actions": [],
     "menus": {
@@ -45,5 +50,8 @@
     "parcel-bundler": "^1.12.4",
     "sourcegraph": "^24.7.0",
     "typescript": "^4.0.3"
+  },
+  "dependencies": {
+    "rxjs": "^6.6.3"
   }
 }
