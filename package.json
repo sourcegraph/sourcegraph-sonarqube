@@ -25,6 +25,10 @@
   "version": "0.0.0-DEVELOPMENT",
   "license": "Apache-2.0",
   "main": "dist/sonarqube.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sourcegraph/sourcegraph-sonarqube"
+  },
   "scripts": {
     "eslint": "eslint 'src/**/*.ts'",
     "typecheck": "tsc -p tsconfig.json",
