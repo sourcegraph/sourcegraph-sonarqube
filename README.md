@@ -1,0 +1,3 @@
+# sonarqube (Sourcegraph extension)
+
+.
