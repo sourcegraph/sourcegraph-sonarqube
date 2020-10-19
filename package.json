@@ -23,6 +23,16 @@
     "configuration": {
       "type": "object",
       "properties": {
+        "sonarqube.instanceUrl": {
+          "description": "The URL to the Sonarqube instance.",
+          "type": "string",
+          "default": "https://sonarcloud.io/"
+        },
+        "sonarqube.corsAnywhereUrl": {
+          "description": "The URL to a CORS proxy.",
+          "type": "string",
+          "default": "https://cors-anywhere.herokuapp.com"
+        },
         "sonarqube.repositoryNamePattern": {
           "description": "Regular expression with that is matched on the repository name to extract the capture groups for organization and project key templates.",
           "type": "string",

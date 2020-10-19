@@ -19,14 +19,22 @@ const severityIcons: Record<Severity, string> = {
 }
 
 interface Configuration {
+    'sonarqube.instanceUrl'?: string
+    'sonarqube.corsAnywhereUrl'?: string
     'sonarqube.organizationPattern'?: string
     'sonarqube.organizationKeyTemplate'?: string
     'sonarqube.projectKeyTemplate'?: string
 }
 
+const getConfig = (): Configuration => sourcegraph.configuration.get<Configuration>().value
+
 export function activate(context: sourcegraph.ExtensionContext): void {
-    const sonarqubeUrl = new URL('https://sonarcloud.io/')
-    const sonarqubeApiUrl = new URL(`https://cors-anywhere.herokuapp.com/${sonarqubeUrl.href}`)
+    const config = getConfig()
+    const sonarqubeUrl = new URL(config['sonarqube.instanceUrl'] || 'https://sonarcloud.io/')
+    const corsAnyWhereUrl = new URL(config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.herokuapp.com')
+    const sonarqubeApiUrl = new URL(
+        `${corsAnyWhereUrl.href.replace(/\/$/, '')}/${sonarqubeUrl.href.replace(/\/$/, '')}/`
+    )
     context.subscriptions.add(
         from(sourcegraph.app.activeWindowChanges)
             .pipe(
@@ -39,7 +47,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         const commitID = decodeURIComponent(uri.search.slice(1))
                         const filePath = decodeURIComponent(uri.hash.slice(1))
 
-                        const config = sourcegraph.configuration.get<Configuration>().value
+                        const config = getConfig()
                         const repositoryNamePattern = new RegExp(
                             config['sonarqube.organizationPattern'] || '(?:^|/)([^/]+)/([^/]+)$'
                         )
@@ -52,12 +60,12 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         const organizationKeyTemplate = config['sonarqube.organizationKeyTemplate'] ?? '$1'
                         const organization = organizationKeyTemplate.replace(
                             /\$(\d)/g,
-                            (substring, number) => repositoryNameMatch[+number]
+                            (substring, number: string) => repositoryNameMatch[+number]
                         )
                         const projectKeyTemplate = config['sonarqube.projectKeyTemplate'] ?? '$1_$2'
                         const project = projectKeyTemplate.replace(
                             /\$(\d)/g,
-                            (substring, number) => repositoryNameMatch[+number]
+                            (substring, number: string) => repositoryNameMatch[+number]
                         )
                         console.log('Mapped repository name to Sonarqube according to templates', {
                             organization,
