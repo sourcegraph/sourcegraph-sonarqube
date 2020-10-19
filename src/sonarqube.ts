@@ -1,6 +1,6 @@
 import * as sourcegraph from 'sourcegraph'
 import { combineLatest, EMPTY, from } from 'rxjs'
-import { filter, switchMap } from 'rxjs/operators'
+import { filter, map, switchMap } from 'rxjs/operators'
 import { searchIssues, IssueType, searchComponents, Severity, listBranches } from './api'
 
 const decorationKey = sourcegraph.app.createDecorationType()
@@ -42,12 +42,11 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                 switchMap(activeWindow => activeWindow?.activeViewComponentChanges || EMPTY),
                 filter((viewer): viewer is sourcegraph.CodeEditor => !!viewer && viewer.type === 'CodeEditor')
             ),
-            from(sourcegraph.configuration),
+            from(sourcegraph.configuration).pipe(map(() => getConfig())),
         ])
             .pipe(
-                switchMap(async ([editor]) => {
+                switchMap(async ([editor, config]) => {
                     try {
-                        const config = getConfig()
                         if (config['sonarqube.showIssuesOnCodeViews'] === false) {
                             return { editor, issues: [] }
                         }
