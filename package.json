@@ -20,7 +20,27 @@
       "editor/title": [],
       "commandPalette": []
     },
-    "configuration": {}
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "sonarqube.repositoryNamePattern": {
+          "description": "Regular expression with that is matched on the repository name to extract the capture groups for organization and project key templates.",
+          "type": "string",
+          "format": "regex",
+          "default": "(?:^|/)([^/]+)/([^/]+)$"
+        },
+        "sonarqube.organizationKeyTemplate": {
+          "description": "Replace string to build the organization key from the repository name pattern, using $n references for capture groups. By default just uses the first capture group",
+          "type": "string",
+          "default": "$1"
+        },
+        "sonarqube.projectKeyTemplate": {
+          "description": "Replace string to build the project key from the repository name pattern, using $n references for capture groups.",
+          "type": "string",
+          "default": "$1_$2"
+        }
+      }
+    }
   },
   "version": "0.0.0-DEVELOPMENT",
   "license": "Apache-2.0",

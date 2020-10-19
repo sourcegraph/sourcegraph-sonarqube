@@ -18,6 +18,12 @@ const severityIcons: Record<Severity, string> = {
     MINOR: '⬇️',
 }
 
+interface Configuration {
+    'sonarqube.organizationPattern'?: string
+    'sonarqube.organizationKeyTemplate'?: string
+    'sonarqube.projectKeyTemplate'?: string
+}
+
 export function activate(context: sourcegraph.ExtensionContext): void {
     const sonarqubeUrl = new URL('https://sonarcloud.io/')
     const sonarqubeApiUrl = new URL(`https://cors-anywhere.herokuapp.com/${sonarqubeUrl.href}`)
@@ -32,18 +38,34 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                     const commitID = decodeURIComponent(uri.search.slice(1))
                     const filePath = decodeURIComponent(uri.hash.slice(1))
                     const fileName = filePath.split('/').pop()!
-                    const repoNameParts = repoName.split('/')
-                    if (repoNameParts.length === 3) {
-                        repoNameParts.shift()
-                    } else if (repoNameParts.length !== 2) {
-                        throw new Error('Repository name not in org/name format')
+
+                    const config = sourcegraph.configuration.get<Configuration>().value
+                    const repositoryNamePattern = new RegExp(
+                        config['sonarqube.organizationPattern'] || '(?:^|/)([^/]+)/([^/]+)$'
+                    )
+                    const repositoryNameMatch = repoName.match(repositoryNamePattern)
+                    if (!repositoryNameMatch) {
+                        throw new Error(
+                            `repositoryNamePattern ${repositoryNamePattern.toString()} did not match repository name ${repoName}`
+                        )
                     }
-                    const [organization, repo] = repoNameParts
+                    const organizationKeyTemplate = config['sonarqube.organizationKeyTemplate'] ?? '$1'
+                    const organization = organizationKeyTemplate.replace(
+                        /\$(\d)/g,
+                        (substring, number) => repositoryNameMatch[+number]
+                    )
+                    const projectKeyTemplate = config['sonarqube.projectKeyTemplate'] ?? '$1_$2'
+                    const project = projectKeyTemplate.replace(
+                        /\$(\d)/g,
+                        (substring, number) => repositoryNameMatch[+number]
+                    )
+                    console.log('Mapped repository name to Sonarqube according to templates', { organization, project })
+
                     // For some reason searching for the whole file path doesn't work.
                     // As soon as the query contains a slash, no results are returned.
                     const components = await searchComponents({ query: fileName, organization, sonarqubeApiUrl })
                     const component = components.find(
-                        component => component.key.endsWith(filePath) && component.project.includes(repo)
+                        component => component.key.endsWith(filePath) && component.project === project
                     )
                     if (!component) {
                         throw new Error('Could not find Sonarqube component')
