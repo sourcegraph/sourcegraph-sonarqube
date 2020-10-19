@@ -33,56 +33,64 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                 switchMap(activeWindow => activeWindow?.activeViewComponentChanges || EMPTY),
                 filter((viewer): viewer is sourcegraph.CodeEditor => !!viewer && viewer.type === 'CodeEditor'),
                 switchMap(async editor => {
-                    const uri = new URL(editor.document.uri)
-                    const repoName = decodeURIComponent(uri.hostname + uri.pathname)
-                    const commitID = decodeURIComponent(uri.search.slice(1))
-                    const filePath = decodeURIComponent(uri.hash.slice(1))
-                    const fileName = filePath.split('/').pop()!
+                    try {
+                        const uri = new URL(editor.document.uri)
+                        const repoName = decodeURIComponent(uri.hostname + uri.pathname)
+                        const commitID = decodeURIComponent(uri.search.slice(1))
+                        const filePath = decodeURIComponent(uri.hash.slice(1))
 
-                    const config = sourcegraph.configuration.get<Configuration>().value
-                    const repositoryNamePattern = new RegExp(
-                        config['sonarqube.organizationPattern'] || '(?:^|/)([^/]+)/([^/]+)$'
-                    )
-                    const repositoryNameMatch = repoName.match(repositoryNamePattern)
-                    if (!repositoryNameMatch) {
-                        throw new Error(
-                            `repositoryNamePattern ${repositoryNamePattern.toString()} did not match repository name ${repoName}`
+                        const config = sourcegraph.configuration.get<Configuration>().value
+                        const repositoryNamePattern = new RegExp(
+                            config['sonarqube.organizationPattern'] || '(?:^|/)([^/]+)/([^/]+)$'
                         )
-                    }
-                    const organizationKeyTemplate = config['sonarqube.organizationKeyTemplate'] ?? '$1'
-                    const organization = organizationKeyTemplate.replace(
-                        /\$(\d)/g,
-                        (substring, number) => repositoryNameMatch[+number]
-                    )
-                    const projectKeyTemplate = config['sonarqube.projectKeyTemplate'] ?? '$1_$2'
-                    const project = projectKeyTemplate.replace(
-                        /\$(\d)/g,
-                        (substring, number) => repositoryNameMatch[+number]
-                    )
-                    console.log('Mapped repository name to Sonarqube according to templates', { organization, project })
+                        const repositoryNameMatch = repoName.match(repositoryNamePattern)
+                        if (!repositoryNameMatch) {
+                            throw new Error(
+                                `repositoryNamePattern ${repositoryNamePattern.toString()} did not match repository name ${repoName}`
+                            )
+                        }
+                        const organizationKeyTemplate = config['sonarqube.organizationKeyTemplate'] ?? '$1'
+                        const organization = organizationKeyTemplate.replace(
+                            /\$(\d)/g,
+                            (substring, number) => repositoryNameMatch[+number]
+                        )
+                        const projectKeyTemplate = config['sonarqube.projectKeyTemplate'] ?? '$1_$2'
+                        const project = projectKeyTemplate.replace(
+                            /\$(\d)/g,
+                            (substring, number) => repositoryNameMatch[+number]
+                        )
+                        console.log('Mapped repository name to Sonarqube according to templates', {
+                            organization,
+                            project,
+                        })
 
-                    // For some reason searching for the whole file path doesn't work.
-                    // As soon as the query contains a slash, no results are returned.
-                    const components = await searchComponents({ query: fileName, organization, sonarqubeApiUrl })
-                    const component = components.find(
-                        component => component.key.endsWith(filePath) && component.project === project
-                    )
-                    if (!component) {
-                        throw new Error('Could not find Sonarqube component')
-                    }
-                    const branches = await listBranches({ project: component.project, sonarqubeApiUrl })
-                    const branch = branches.find(branch => branch.commit.sha === commitID)
-                    if (!branch) {
-                        console.warn(
-                            `No Sonarqube branch found for commit ID ${commitID}, falling back to default branch`
+                        // For some reason searching for the whole file path doesn't work.
+                        // As soon as the query contains a slash, no results are returned.
+                        const fileName = filePath.split('/').pop()!
+                        const components = await searchComponents({ query: fileName, organization, sonarqubeApiUrl })
+                        const component = components.find(
+                            component => component.key.endsWith(filePath) && component.project === project
                         )
+                        if (!component) {
+                            throw new Error('Could not find Sonarqube component')
+                        }
+                        const branches = await listBranches({ project: component.project, sonarqubeApiUrl })
+                        const branch = branches.find(branch => branch.commit.sha === commitID)
+                        if (!branch) {
+                            console.warn(
+                                `No Sonarqube branch found for commit ID ${commitID}, falling back to default branch`
+                            )
+                        }
+                        const issues = await searchIssues({
+                            sonarqubeApiUrl,
+                            componentKeys: [component.key],
+                            branch: branch?.name,
+                        })
+                        return { editor, issues }
+                    } catch (error) {
+                        console.error(error)
+                        return { editor, issues: [] }
                     }
-                    const issues = await searchIssues({
-                        sonarqubeApiUrl,
-                        componentKeys: [component.key],
-                        branch: branch?.name,
-                    })
-                    return { editor, issues }
                 })
             )
             .subscribe(({ editor, issues }) => {
