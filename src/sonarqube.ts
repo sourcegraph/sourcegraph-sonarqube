@@ -1,5 +1,5 @@
 import * as sourcegraph from 'sourcegraph'
-import { EMPTY, from } from 'rxjs'
+import { combineLatest, EMPTY, from } from 'rxjs'
 import { filter, switchMap } from 'rxjs/operators'
 import { searchIssues, IssueType, searchComponents, Severity, listBranches } from './api'
 
@@ -19,6 +19,7 @@ const severityIcons: Record<Severity, string> = {
 }
 
 interface Configuration {
+    'sonarqube.showIssuesOnCodeViews'?: boolean
     'sonarqube.instanceUrl'?: string
     'sonarqube.corsAnywhereUrl'?: string
     'sonarqube.organizationPattern'?: string
@@ -36,18 +37,26 @@ export function activate(context: sourcegraph.ExtensionContext): void {
         `${corsAnyWhereUrl.href.replace(/\/$/, '')}/${sonarqubeUrl.href.replace(/\/$/, '')}/`
     )
     context.subscriptions.add(
-        from(sourcegraph.app.activeWindowChanges)
-            .pipe(
+        combineLatest([
+            from(sourcegraph.app.activeWindowChanges).pipe(
                 switchMap(activeWindow => activeWindow?.activeViewComponentChanges || EMPTY),
-                filter((viewer): viewer is sourcegraph.CodeEditor => !!viewer && viewer.type === 'CodeEditor'),
-                switchMap(async editor => {
+                filter((viewer): viewer is sourcegraph.CodeEditor => !!viewer && viewer.type === 'CodeEditor')
+            ),
+            from(sourcegraph.configuration),
+        ])
+            .pipe(
+                switchMap(async ([editor]) => {
                     try {
+                        const config = getConfig()
+                        if (config['sonarqube.showIssuesOnCodeViews'] === false) {
+                            return { editor, issues: [] }
+                        }
+
                         const uri = new URL(editor.document.uri)
                         const repoName = decodeURIComponent(uri.hostname + uri.pathname)
                         const commitID = decodeURIComponent(uri.search.slice(1))
                         const filePath = decodeURIComponent(uri.hash.slice(1))
 
-                        const config = getConfig()
                         const repositoryNamePattern = new RegExp(
                             config['sonarqube.organizationPattern'] || '(?:^|/)([^/]+)/([^/]+)$'
                         )
@@ -125,6 +134,14 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                     })
                 )
             })
+    )
+
+    context.subscriptions.add(
+        sourcegraph.commands.registerCommand('sonarqube.toggleIssuesOnCodeViews', async () => {
+            const config = sourcegraph.configuration.get<Configuration>()
+            const showIssuesOnCodeViews = config.value['sonarqube.showIssuesOnCodeViews'] !== false
+            await config.update('sonarqube.showIssuesOnCodeViews', !showIssuesOnCodeViews)
+        })
     )
 }
 
