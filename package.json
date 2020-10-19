@@ -18,7 +18,15 @@
     "actions": [
       {
         "id": "sonarqube.showIssuesOnCodeViews.toggle",
-        "command": "sonarqube.toggleIssuesOnCodeViews",
+        "command": "updateConfiguration",
+        "commandArguments": [
+          [
+            "sonarqube.showIssuesOnCodeViews"
+          ],
+          "${!config.sonarqube.showIssuesOnCodeViews}",
+          null,
+          "json"
+        ],
         "title": "${get(context, 'sonarqube.errorMessage') || (config.sonarqube.showIssuesOnCodeViews && \"Hide inline Sonarqube issues\" || \"Show inline Sonarqube issues\")}",
         "category": "Sonarqube",
         "actionItem": {
