@@ -51,12 +51,14 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                     const branches = await listBranches({ project: component.project, sonarqubeApiUrl })
                     const branch = branches.find(branch => branch.commit.sha === commitID)
                     if (!branch) {
-                        throw new Error(`Commit ${commitID} is not the tip of any Sonarqube branch`)
+                        console.warn(
+                            `No Sonarqube branch found for commit ID ${commitID}, falling back to default branch`
+                        )
                     }
                     const issues = await searchIssues({
                         sonarqubeApiUrl,
                         componentKeys: [component.key],
-                        branch: branch.name,
+                        branch: branch?.name,
                     })
                     return { editor, issues }
                 })
@@ -74,7 +76,8 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         const typeIcon = typeIcons[type]
                         return {
                             range: new sourcegraph.Range(startLine - 1, startOffset, endLine - 1, endOffset),
-                            border: '1px solid var(--danger)',
+                            backgroundColor: 'rgba(var(--oc-red-7-rgb), 0.1)',
+                            border: '1px solid rgba(var(--oc-red-7-rgb), 0.9)',
                             after: {
                                 color: 'var(--danger)',
                                 contentText: ` ${typeIcon} ${typeString}: ${message} ${severityIcon} ${severity} ⏱ ${effort} effort 🗓 created ${dateString} ${tagsString} `,
