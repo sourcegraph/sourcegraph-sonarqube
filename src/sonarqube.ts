@@ -89,7 +89,9 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                             component => component.key.endsWith(filePath) && component.project === project
                         )
                         if (!component) {
-                            throw new Error('Could not find Sonarqube component')
+                            throw new Error(
+                                `Could not find Sonarqube component for this file in Sonarqube project "${project}"`
+                            )
                         }
                         const branches = await listBranches({ project: component.project, sonarqubeApiUrl })
                         const branch = branches.find(branch => branch.commit.sha === commitID)
@@ -106,6 +108,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         return { editor, issues }
                     } catch (error) {
                         console.error(error)
+                        sourcegraph.internal.updateContext({ 'sonarqube.errorMessage': error?.message })
                         return { editor, issues: [] }
                     }
                 })
