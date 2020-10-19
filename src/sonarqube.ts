@@ -8,7 +8,7 @@ const decorationKey = sourcegraph.app.createDecorationType()
 const typeIcons: Record<IssueType, string> = {
     BUG: '🐞',
     CODE_SMELL: '☢️',
-    VULNERABILITY: '🚨',
+    VULNERABILITY: '🔓',
 }
 
 const severityIcons: Record<Severity, string> = {
