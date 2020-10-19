@@ -24,7 +24,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
     context.subscriptions.add(
         from(sourcegraph.app.activeWindowChanges)
             .pipe(
-                switchMap(activeWindow => (activeWindow && activeWindow.activeViewComponentChanges) || EMPTY),
+                switchMap(activeWindow => activeWindow?.activeViewComponentChanges || EMPTY),
                 filter((viewer): viewer is sourcegraph.CodeEditor => !!viewer && viewer.type === 'CodeEditor'),
                 switchMap(async editor => {
                     const uri = new URL(editor.document.uri)

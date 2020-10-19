@@ -1,0 +1,10 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "include": ["plugin-proposal-optional-chaining", "plugin-proposal-nullish-coalescing-operator"]
+      }
+    ]
+  ]
+}
