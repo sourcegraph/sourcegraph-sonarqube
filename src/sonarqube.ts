@@ -1,7 +1,7 @@
 import * as sourcegraph from 'sourcegraph'
 import { EMPTY, from } from 'rxjs'
 import { filter, switchMap } from 'rxjs/operators'
-import { fetchIssues, IssueType, searchComponents, Severity } from './api'
+import { searchIssues, IssueType, searchComponents, Severity, listBranches } from './api'
 
 const decorationKey = sourcegraph.app.createDecorationType()
 
@@ -29,7 +29,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                 switchMap(async editor => {
                     const uri = new URL(editor.document.uri)
                     const repoName = decodeURIComponent(uri.hostname + uri.pathname)
-                    // const revision = decodeURIComponent(uri.search.slice(1))
+                    const commitID = decodeURIComponent(uri.search.slice(1))
                     const filePath = decodeURIComponent(uri.hash.slice(1))
                     const fileName = filePath.split('/').pop()!
                     const repoNameParts = repoName.split('/')
@@ -48,9 +48,15 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                     if (!component) {
                         throw new Error('Could not find Sonarqube component')
                     }
-                    const issues = await fetchIssues({
+                    const branches = await listBranches({ project: component.project, sonarqubeApiUrl })
+                    const branch = branches.find(branch => branch.commit.sha === commitID)
+                    if (!branch) {
+                        throw new Error(`Commit ${commitID} is not the tip of any Sonarqube branch`)
+                    }
+                    const issues = await searchIssues({
                         sonarqubeApiUrl,
                         componentKeys: [component.key],
+                        branch: branch.name,
                     })
                     return { editor, issues }
                 })

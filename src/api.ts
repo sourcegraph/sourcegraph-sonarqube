@@ -68,7 +68,7 @@ export async function searchComponents(
     return result.components
 }
 
-export async function fetchIssues(options: FetchIssuesOptions): Promise<Issue[]> {
+export async function searchIssues(options: FetchIssuesOptions): Promise<Issue[]> {
     const url = new URL('api/issues/search', options.sonarqubeApiUrl)
     // Comma-separated list of component keys. Retrieve issues associated to a specific list of components (and all
     // its descendants). A component can be a project, directory or file.
@@ -78,4 +78,35 @@ export async function fetchIssues(options: FetchIssuesOptions): Promise<Issue[]>
     }
     const result = await jsonResponse(await fetch(url.href))
     return result.issues
+}
+
+export interface Branch {
+    name: string
+    isMain: boolean
+    /** Long-lived or short-lived */
+    type: 'LONG' | 'SHORT'
+    status: {
+        qualityGateStatus: 'ERROR' | 'OK'
+        bugs?: number
+        vulnerabilities?: number
+        codeSmells?: number
+    }
+    analysisDate: string
+    commit: {
+        sha: string
+        author: {
+            name: string
+            login: string
+            avatar: string
+        }
+        date: string
+        message: string
+    }
+}
+
+export async function listBranches(options: { project: string } & ApiOptions): Promise<Branch[]> {
+    const url = new URL('api/project_branches/list', options.sonarqubeApiUrl)
+    url.searchParams.set('project', options.project)
+    const result = await jsonResponse(await fetch(url.href))
+    return result.branches
 }
