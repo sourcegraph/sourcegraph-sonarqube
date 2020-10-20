@@ -17,6 +17,8 @@ Each decoration links to the issue on Sonarqube.
 
 ## Configuration
 
+The extension can be configured through JSON in user, organization or global settings.
+
 ```jsonc
 {
   // Configure the extension to use a private Sonarqube instance.
