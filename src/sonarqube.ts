@@ -1,7 +1,7 @@
 import * as sourcegraph from 'sourcegraph'
 import { combineLatest, EMPTY, from } from 'rxjs'
 import { filter, map, switchMap } from 'rxjs/operators'
-import { searchIssues, IssueType, searchComponents, Severity, listBranches } from './api'
+import { searchIssues, IssueType, searchComponents, Severity, listBranches, ApiOptions, Issue } from './api'
 
 const decorationKey = sourcegraph.app.createDecorationType()
 
@@ -21,6 +21,7 @@ const severityIcons: Record<Severity, string> = {
 interface Configuration {
     'sonarqube.showIssuesOnCodeViews'?: boolean
     'sonarqube.instanceUrl'?: string
+    'sonarqube.apiToken'?: string
     'sonarqube.corsAnywhereUrl'?: string
     'sonarqube.organizationPattern'?: string
     'sonarqube.organizationKeyTemplate'?: string
@@ -30,12 +31,6 @@ interface Configuration {
 const getConfig = (): Configuration => sourcegraph.configuration.get<Configuration>().value
 
 export function activate(context: sourcegraph.ExtensionContext): void {
-    const config = getConfig()
-    const sonarqubeUrl = new URL(config['sonarqube.instanceUrl'] || 'https://sonarcloud.io/')
-    const corsAnyWhereUrl = new URL(config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.herokuapp.com')
-    const sonarqubeApiUrl = new URL(
-        `${corsAnyWhereUrl.href.replace(/\/$/, '')}/${sonarqubeUrl.href.replace(/\/$/, '')}/`
-    )
     context.subscriptions.add(
         combineLatest([
             from(sourcegraph.app.activeWindowChanges).pipe(
@@ -48,7 +43,17 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                 switchMap(async ([editor, config]) => {
                     try {
                         if (config['sonarqube.showIssuesOnCodeViews'] === false) {
-                            return { editor, issues: [], errorMessage: null }
+                            return { editor, issues: [] as Issue[], errorMessage: null }
+                        }
+                        const corsAnyWhereUrl = new URL(
+                            config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.herokuapp.com'
+                        )
+                        const sonarqubeUrl = new URL(config['sonarqube.instanceUrl'] || 'https://sonarcloud.io/')
+                        const apiOptions: ApiOptions = {
+                            sonarqubeApiUrl: new URL(
+                                `${corsAnyWhereUrl.href.replace(/\/$/, '')}/${sonarqubeUrl.href.replace(/\/$/, '')}/`
+                            ),
+                            apiToken: config['sonarqube.apiToken'],
                         }
 
                         const uri = new URL(editor.document.uri)
@@ -83,7 +88,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         // For some reason searching for the whole file path doesn't work.
                         // As soon as the query contains a slash, no results are returned.
                         const fileName = filePath.split('/').pop()!
-                        const components = await searchComponents({ query: fileName, organization, sonarqubeApiUrl })
+                        const components = await searchComponents({ query: fileName, organization, ...apiOptions })
                         const component = components.find(
                             component => component.key.endsWith(filePath) && component.project === project
                         )
@@ -92,7 +97,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                                 `Could not find Sonarqube component for this file in Sonarqube project "${project}"`
                             )
                         }
-                        const branches = await listBranches({ project: component.project, sonarqubeApiUrl })
+                        const branches = await listBranches({ project: component.project, ...apiOptions })
                         const branch = branches.find(branch => branch.commit.sha === commitID)
                         if (!branch) {
                             console.warn(
@@ -100,18 +105,18 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                             )
                         }
                         const issues = await searchIssues({
-                            sonarqubeApiUrl,
+                            ...apiOptions,
                             componentKeys: [component.key],
                             branch: branch?.name,
                         })
-                        return { editor, issues, errorMessage: null as string | null }
+                        return { editor, issues, errorMessage: null as string | null, sonarqubeUrl }
                     } catch (error) {
                         console.error(error)
-                        return { editor, issues: [], errorMessage: String(error?.message) }
+                        return { editor, issues: [] as Issue[], errorMessage: String(error?.message) }
                     }
                 })
             )
-            .subscribe(({ editor, issues, errorMessage }) => {
+            .subscribe(({ editor, issues, errorMessage, sonarqubeUrl }) => {
                 sourcegraph.internal.updateContext({ 'sonarqube.errorMessage': errorMessage })
                 editor.setDecorations(
                     decorationKey,

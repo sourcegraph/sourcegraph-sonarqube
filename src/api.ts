@@ -1,8 +1,8 @@
-interface ApiOptions {
+export interface ApiOptions {
     sonarqubeApiUrl: URL
 
     /** API authentication token */
-    token: string
+    apiToken?: string
 }
 
 interface FetchIssuesOptions extends ApiOptions {
@@ -25,7 +25,7 @@ export type IssueType = 'BUG' | 'VULNERABILITY' | 'CODE_SMELL'
 
 export type Severity = 'MINOR' | 'MAJOR' | 'CRITICAL' | 'BLOCKER'
 
-interface Issue {
+export interface Issue {
     key: string
     rule: string
     severity: Severity
@@ -56,8 +56,8 @@ async function fetchApi(path: string, searchParameters: URLSearchParams, options
     const url = new URL(path, options.sonarqubeApiUrl)
     url.search = searchParameters.toString()
     const headers = new Headers()
-    if (options.token) {
-        headers.set('Authorization', 'Basic ' + btoa(options.token + ':'))
+    if (options.apiToken) {
+        headers.set('Authorization', 'Basic ' + btoa(options.apiToken + ':'))
     }
     const response = await fetch(url.href, { headers })
     if (!response.ok) {
