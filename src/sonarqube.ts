@@ -48,7 +48,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                 switchMap(async ([editor, config]) => {
                     try {
                         if (config['sonarqube.showIssuesOnCodeViews'] === false) {
-                            return { editor, issues: [] }
+                            return { editor, issues: [], errorMessage: null }
                         }
 
                         const uri = new URL(editor.document.uri)
@@ -104,15 +104,15 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                             componentKeys: [component.key],
                             branch: branch?.name,
                         })
-                        return { editor, issues }
+                        return { editor, issues, errorMessage: null as string | null }
                     } catch (error) {
                         console.error(error)
-                        sourcegraph.internal.updateContext({ 'sonarqube.errorMessage': error?.message })
-                        return { editor, issues: [] }
+                        return { editor, issues: [], errorMessage: String(error?.message) }
                     }
                 })
             )
-            .subscribe(({ editor, issues }) => {
+            .subscribe(({ editor, issues, errorMessage }) => {
+                sourcegraph.internal.updateContext({ 'sonarqube.errorMessage': errorMessage })
                 editor.setDecorations(
                     decorationKey,
                     issues.map(issue => {
