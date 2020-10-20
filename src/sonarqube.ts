@@ -137,14 +137,6 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                 )
             })
     )
-
-    context.subscriptions.add(
-        sourcegraph.commands.registerCommand('sonarqube.toggleIssuesOnCodeViews', async () => {
-            const config = sourcegraph.configuration.get<Configuration>()
-            const showIssuesOnCodeViews = config.value['sonarqube.showIssuesOnCodeViews'] !== false
-            await config.update('sonarqube.showIssuesOnCodeViews', !showIssuesOnCodeViews)
-        })
-    )
 }
 
 // Sourcegraph extension documentation: https://docs.sourcegraph.com/extensions/authoring

@@ -23,7 +23,7 @@
           [
             "sonarqube.showIssuesOnCodeViews"
           ],
-          "${!config.sonarqube.showIssuesOnCodeViews}",
+          "${!(config.sonarqube.showIssuesOnCodeViews !== false)}",
           null,
           "json"
         ],
