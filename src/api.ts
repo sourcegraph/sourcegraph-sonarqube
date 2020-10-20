@@ -1,5 +1,8 @@
 interface ApiOptions {
     sonarqubeApiUrl: URL
+
+    /** API authentication token */
+    token: string
 }
 
 interface FetchIssuesOptions extends ApiOptions {
@@ -49,7 +52,14 @@ interface Issue {
     fromHotspot: false
 }
 
-async function jsonResponse(response: Response): Promise<any> {
+async function fetchApi(path: string, searchParameters: URLSearchParams, options: ApiOptions): Promise<any> {
+    const url = new URL(path, options.sonarqubeApiUrl)
+    url.search = searchParameters.toString()
+    const headers = new Headers()
+    if (options.token) {
+        headers.set('Authorization', 'Basic ' + btoa(options.token + ':'))
+    }
+    const response = await fetch(url.href, { headers })
     if (!response.ok) {
         throw new Error(response.statusText)
     }
@@ -60,23 +70,23 @@ async function jsonResponse(response: Response): Promise<any> {
 export async function searchComponents(
     options: ApiOptions & { query: string; organization: string }
 ): Promise<Component[]> {
-    const url = new URL('api/components/search', options.sonarqubeApiUrl)
-    url.searchParams.set('organization', options.organization)
-    url.searchParams.set('qualifiers', 'FIL,UTS')
-    url.searchParams.set('q', options.query)
-    const result = await jsonResponse(await fetch(url.href))
+    const searchParameters = new URLSearchParams()
+    searchParameters.set('organization', options.organization)
+    searchParameters.set('qualifiers', 'FIL,UTS')
+    searchParameters.set('q', options.query)
+    const result = await fetchApi('api/components/search', searchParameters, options)
     return result.components
 }
 
 export async function searchIssues(options: FetchIssuesOptions): Promise<Issue[]> {
-    const url = new URL('api/issues/search', options.sonarqubeApiUrl)
+    const searchParameters = new URLSearchParams()
     // Comma-separated list of component keys. Retrieve issues associated to a specific list of components (and all
     // its descendants). A component can be a project, directory or file.
-    url.searchParams.set('componentKeys', options.componentKeys.join(','))
+    searchParameters.set('componentKeys', options.componentKeys.join(','))
     if (options.branch) {
-        url.searchParams.set('branch', options.branch)
+        searchParameters.set('branch', options.branch)
     }
-    const result = await jsonResponse(await fetch(url.href))
+    const result = await fetchApi('api/issues/search', searchParameters, options)
     return result.issues
 }
 
@@ -105,8 +115,8 @@ export interface Branch {
 }
 
 export async function listBranches(options: { project: string } & ApiOptions): Promise<Branch[]> {
-    const url = new URL('api/project_branches/list', options.sonarqubeApiUrl)
-    url.searchParams.set('project', options.project)
-    const result = await jsonResponse(await fetch(url.href))
+    const searchParameters = new URLSearchParams()
+    searchParameters.set('project', options.project)
+    const result = await fetchApi('api/project_branches/list', searchParameters, options)
     return result.branches
 }

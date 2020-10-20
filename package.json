@@ -58,6 +58,10 @@
           "type": "string",
           "default": "https://sonarcloud.io/"
         },
+        "sonarqube.apiToken": {
+          "description": "The API authentication token for the Sonarqube instance, if needed.",
+          "type": "string"
+        },
         "sonarqube.corsAnywhereUrl": {
           "description": "The URL to a CORS proxy.",
           "type": "string",

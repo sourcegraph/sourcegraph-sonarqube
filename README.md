@@ -24,6 +24,8 @@ The extension can be configured through JSON in user, organization or global set
   // Configure the extension to use a private Sonarqube instance.
   // By default, Sonarcloud is used.
   "sonarqube.instanceUrl": "https://sonarcloud.io/",
+  // An API token to the Sonarqube instance, if needed.
+  "sonarqube.apiToken": "...",
 
   // The Sonarqube extension needs to map the repository on Sourcegraph to a project inside an organization on
   // Sonarqube. The default settings work for most projects on Sonarcloud, but if you have a custom setup, you
