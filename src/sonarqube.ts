@@ -111,7 +111,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         })
                         return { editor, issues, errorMessage: null as string | null, sonarqubeUrl }
                     } catch (error) {
-                        console.error(error)
+                        console.error('Error fetching Sonarqube data:', error)
                         return { editor, issues: [] as Issue[], errorMessage: String(error?.message) }
                     }
                 })
