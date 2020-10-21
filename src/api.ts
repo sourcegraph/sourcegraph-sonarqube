@@ -61,6 +61,16 @@ async function fetchApi(path: string, searchParameters: URLSearchParams, options
     }
     const response = await fetch(url.href, { headers })
     if (!response.ok) {
+        if (response.headers.get('Content-Type')?.includes('json')) {
+            const { errors } = (await response.json()) as { errors: { msg: string }[] }
+            if (errors.length === 1) {
+                throw new Error(errors[0].msg)
+            }
+            throw new AggregateError(
+                errors.map(error => new Error(error.msg)),
+                errors.map(error => error.msg).join('\n')
+            )
+        }
         throw new Error(response.statusText)
     }
     const result = await response.json()
