@@ -46,7 +46,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                             return { editor, issues: [] as Issue[], errorMessage: null }
                         }
                         const corsAnyWhereUrl = new URL(
-                            config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.herokuapp.com'
+                            config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.sgdev.org'
                         )
                         const sonarqubeUrl = new URL(config['sonarqube.instanceUrl'] || 'https://sonarcloud.io/')
                         const apiOptions: ApiOptions = {
