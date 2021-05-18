@@ -10,7 +10,7 @@ Show Sonarqube issues when browsing files on Sourcegraph.
 </picture>
 </p>
 
-➡️ Try it out on [github.com/apache/struts](https://sourcegraph.com/github.com/apache/struts/-/blob/apps/rest-showcase/src/main/java/org/demo/rest/example/OrdersController.java)
+➡️ Try it out on [github.com/apache/struts](https://sourcegraph.com/github.com/apache/struts/-/blob/core/src/main/java/org/apache/struts2/action/CspReportAction.java#L60)
 
 You can toggle decorations with the Sonarqube button in the action toolbar.
 Each decoration links to the issue on Sonarqube.

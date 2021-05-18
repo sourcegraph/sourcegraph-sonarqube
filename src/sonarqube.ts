@@ -88,27 +88,36 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         // For some reason searching for the whole file path doesn't work.
                         // As soon as the query contains a slash, no results are returned.
                         const fileName = filePath.split('/').pop()!
-                        const components = await searchComponents({ query: fileName, organization, ...apiOptions })
-                        const component = components.find(
-                            component => component.key.endsWith(filePath) && component.project === project
-                        )
+                        const components = await searchComponents({
+                            query: fileName,
+                            organization,
+                            component: project,
+                            ...apiOptions,
+                        })
+
+                        const component = components.find(component => component.key.endsWith(filePath))
+
                         if (!component) {
                             throw new Error(
                                 `Could not find Sonarqube component for this file in Sonarqube project "${project}"`
                             )
                         }
-                        const branches = await listBranches({ project: component.project, ...apiOptions })
+
+                        const branches = await listBranches({ project, ...apiOptions })
                         const branch = branches.find(branch => branch.commit.sha === commitID)
                         if (!branch) {
                             console.warn(
                                 `No Sonarqube branch found for commit ID ${commitID}, falling back to default branch`
                             )
                         }
+
+                        // Find issues related to the Component & Branch
                         const issues = await searchIssues({
                             ...apiOptions,
                             componentKeys: [component.key],
                             branch: branch?.name,
                         })
+
                         return { editor, issues, errorMessage: null as string | null, sonarqubeUrl }
                     } catch (error) {
                         console.error('Error fetching Sonarqube data:', error)
