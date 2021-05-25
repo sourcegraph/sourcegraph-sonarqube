@@ -78,13 +78,14 @@ async function fetchApi(path: string, searchParameters: URLSearchParams, options
 }
 
 export async function searchComponents(
-    options: ApiOptions & { query: string; organization: string }
+    options: ApiOptions & { query: string; organization: string, component: string }
 ): Promise<Component[]> {
     const searchParameters = new URLSearchParams()
     searchParameters.set('organization', options.organization)
+    searchParameters.set('component', options.component)
     searchParameters.set('qualifiers', 'FIL,UTS')
     searchParameters.set('q', options.query)
-    const result = await fetchApi('api/components/search', searchParameters, options)
+    const result = await fetchApi('api/components/tree', searchParameters, options)
     return result.components
 }
 
