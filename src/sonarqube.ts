@@ -104,7 +104,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         }
 
                         const branches = await listBranches({ project, ...apiOptions })
-                        const branch = branches.find(branch => branch.commit.sha === commitID)
+                        const branch = branches.find(branch => branch?.commit?.sha === commitID)
                         if (!branch) {
                             console.warn(
                                 `No Sonarqube branch found for commit ID ${commitID}, falling back to default branch`
