@@ -113,7 +113,7 @@ export interface Branch {
         codeSmells?: number
     }
     analysisDate: string
-    commit: {
+    commit?: {
         sha: string
         author: {
             name: string
