@@ -63,8 +63,11 @@
           "type": "string"
         },
         "sonarqube.corsAnywhereUrl": {
-          "description": "The URL to a CORS proxy.",
-          "type": "string",
+          "description": "The URL to a CORS proxy. Set to null to opt out of using a CORS proxy.",
+          "type": [
+            "string",
+            "null"
+          ],
           "default": "https://cors-anywhere.sgdev.org"
         },
         "sonarqube.repositoryNamePattern": {

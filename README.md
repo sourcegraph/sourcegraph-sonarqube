@@ -47,6 +47,7 @@ The extension can be configured through JSON in user, organization or global set
   // CORS headers are necessary for the extension to fetch data, but Sonarqube does not send them by default.
   // Here you can customize the URL to an HTTP proxy that adds CORS headers.
   // By default Sourcegraph's CORS proxy is used.
+  // Set this to `null` to opt out of using a CORS proxy.
   "sonarqube.corsAnywhereUrl": "https://cors-anywhere.sgdev.org"
 }
 ```
