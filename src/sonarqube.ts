@@ -22,7 +22,7 @@ interface Configuration {
     'sonarqube.showIssuesOnCodeViews'?: boolean
     'sonarqube.instanceUrl'?: string
     'sonarqube.apiToken'?: string
-    'sonarqube.corsAnywhereUrl'?: string
+    'sonarqube.corsAnywhereUrl'?: string | null
     'sonarqube.organizationPattern'?: string
     'sonarqube.organizationKeyTemplate'?: string
     'sonarqube.projectKeyTemplate'?: string
@@ -45,13 +45,20 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         if (config['sonarqube.showIssuesOnCodeViews'] === false) {
                             return { editor, issues: [] as Issue[], errorMessage: null }
                         }
-                        const corsAnyWhereUrl = new URL(
-                            config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.sgdev.org'
-                        )
+                        const corsAnyWhereUrl =
+                            config['sonarqube.corsAnywhereUrl'] === null
+                                ? null
+                                : new URL(config['sonarqube.corsAnywhereUrl'] || 'https://cors-anywhere.sgdev.org')
+
                         const sonarqubeUrl = new URL(config['sonarqube.instanceUrl'] || 'https://sonarcloud.io/')
                         const apiOptions: ApiOptions = {
                             sonarqubeApiUrl: new URL(
-                                `${corsAnyWhereUrl.href.replace(/\/$/, '')}/${sonarqubeUrl.href.replace(/\/$/, '')}/`
+                                corsAnyWhereUrl
+                                    ? `${corsAnyWhereUrl.href.replace(/\/$/, '')}/${sonarqubeUrl.href.replace(
+                                          /\/$/,
+                                          ''
+                                      )}/`
+                                    : `${sonarqubeUrl.href.replace(/\/$/, '')}/`
                             ),
                             apiToken: config['sonarqube.apiToken'],
                         }
