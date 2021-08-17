@@ -10,7 +10,7 @@ Show SonarQube issues when browsing files on Sourcegraph.
 </picture>
 </p>
 
-➡️ Try it out on [github.com/theupdateframework/notary](https://sourcegraph.com/github.com/theupdateframework/notary@master/-/blob/server/storage/tuf_store.go?L25)
+➡️ Try it out on [github.com/apache/struts](https://sourcegraph.com/github.com/apache/struts/-/blob/bundles/admin/src/main/java/org/apache/struts2/osgi/admin/actions/BundlesAction.java#L41)
 
 You can toggle decorations with the SonarQube button in the action toolbar.
 Each decoration links to the issue on SonarQube.
