@@ -87,7 +87,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                             /\$(\d)/g,
                             (substring, number: string) => repositoryNameMatch[+number]
                         )
-                        console.log('Mapped repository name to Sonarqube according to templates', {
+                        console.log('Mapped repository name to SonarQube according to templates', {
                             organization,
                             project,
                         })
@@ -106,7 +106,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
 
                         if (!component) {
                             throw new Error(
-                                `Could not find Sonarqube component for this file in Sonarqube project "${project}"`
+                                `Could not find SonarQube component for this file in SonarQube project "${project}"`
                             )
                         }
 
@@ -114,7 +114,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
                         const branch = branches.find(branch => branch?.commit?.sha === commitID)
                         if (!branch) {
                             console.warn(
-                                `No Sonarqube branch found for commit ID ${commitID}, falling back to default branch`
+                                `No SonarQube branch found for commit ID ${commitID}, falling back to default branch`
                             )
                         }
 
@@ -127,7 +127,7 @@ export function activate(context: sourcegraph.ExtensionContext): void {
 
                         return { editor, issues, errorMessage: null as string | null, sonarqubeUrl }
                     } catch (error) {
-                        console.error('Error fetching Sonarqube data:', error)
+                        console.error('Error fetching SonarQube data:', error)
                         return { editor, issues: [] as Issue[], errorMessage: String(error?.message) }
                     }
                 })
