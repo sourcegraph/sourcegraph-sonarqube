@@ -1,6 +1,5 @@
 import * as sourcegraph from 'sourcegraph'
-import { combineLatest, EMPTY, from } from 'rxjs'
-import { filter, map, switchMap } from 'rxjs/operators'
+import { combineLatest, EMPTY, filter, from, map, switchMap } from 'rxjs'
 import { searchIssues, IssueType, searchComponents, Severity, listBranches, ApiOptions, Issue } from './api'
 
 const decorationKey = sourcegraph.app.createDecorationType()
