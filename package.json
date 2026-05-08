@@ -120,9 +120,9 @@
     "mkdirp": "^1.0.4",
     "parcel-bundler": "^1.12.4",
     "sourcegraph": "^24.7.0",
-    "typescript": "^4.0.3"
+    "typescript": "4.5.5"
   },
   "dependencies": {
-    "rxjs": "^6.6.3"
+    "rxjs": "7.8.2"
   }
 }

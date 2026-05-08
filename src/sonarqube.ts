@@ -1,6 +1,5 @@
 import * as sourcegraph from 'sourcegraph'
-import { combineLatest, EMPTY, from } from 'rxjs'
-import { filter, map, switchMap } from 'rxjs/operators'
+import { combineLatest, EMPTY, filter, map, Observable, switchMap } from 'rxjs'
 import { searchIssues, IssueType, searchComponents, Severity, listBranches, ApiOptions, Issue } from './api'
 
 const decorationKey = sourcegraph.app.createDecorationType()
@@ -30,14 +29,26 @@ interface Configuration {
 
 const getConfig = (): Configuration => sourcegraph.configuration.get<Configuration>().value
 
+const fromSubscribable = <T>(subscribable: sourcegraph.Subscribable<T>): Observable<T> =>
+    new Observable(subscriber => {
+        const subscription = subscribable.subscribe({
+            next: value => subscriber.next(value),
+            error: error => subscriber.error(error),
+            complete: () => subscriber.complete(),
+        })
+        return () => subscription.unsubscribe()
+    })
+
 export function activate(context: sourcegraph.ExtensionContext): void {
     context.subscriptions.add(
         combineLatest([
-            from(sourcegraph.app.activeWindowChanges).pipe(
-                switchMap(activeWindow => activeWindow?.activeViewComponentChanges || EMPTY),
+            fromSubscribable(sourcegraph.app.activeWindowChanges).pipe(
+                switchMap(activeWindow =>
+                    activeWindow ? fromSubscribable(activeWindow.activeViewComponentChanges) : EMPTY
+                ),
                 filter((viewer): viewer is sourcegraph.CodeEditor => !!viewer && viewer.type === 'CodeEditor')
             ),
-            from(sourcegraph.configuration).pipe(map(() => getConfig())),
+            fromSubscribable(sourcegraph.configuration).pipe(map(() => getConfig())),
         ])
             .pipe(
                 switchMap(async ([editor, config]) => {
